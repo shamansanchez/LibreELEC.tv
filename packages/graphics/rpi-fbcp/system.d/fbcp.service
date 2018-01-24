@@ -1,0 +1,9 @@
+[Unit]
+Description=fbcp
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/fbcp
+
+[Install]
+WantedBy=multi-user.target
