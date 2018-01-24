@@ -1,0 +1,11 @@
+[Unit]
+Description=MPD
+Requires=var-media-plent.mount
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/mpd --no-daemon
+ExecStartPost=/usr/bin/mpd_startup.sh
+
+[Install]
+WantedBy=multi-user.target
