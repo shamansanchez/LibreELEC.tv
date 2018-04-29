@@ -1,0 +1,12 @@
+[Unit]
+Description=Plent
+Requires=mpd.service
+After=mpd.service
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/plent.py
+
+[Install]
+WantedBy=multi-user.target
