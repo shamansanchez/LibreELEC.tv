@@ -63,7 +63,7 @@ PKG_CONFIGURE_OPTS_TARGET=" \
   --enable-lame-encoder \
   --enable-libmpdclient \
   --disable-libwrap \
-  --enable-lsr \
+  --disable-lsr \
   --enable-mad \
   --disable-mikmod\
   --disable-mms \
@@ -82,11 +82,11 @@ PKG_CONFIGURE_OPTS_TARGET=" \
   --disable-shine-encoder \
   --disable-sidplay \
   --enable-smbclient \
-  --enable-sndfile \
+  --disable-sndfile \
   --disable-sndio \
   --disable-solaris-output \
   --enable-soundcloud \
-  --enable-soxr \
+  --disable-soxr \
   --enable-sqlite \
   --disable-syslog \
   --disable-systemd-daemon \

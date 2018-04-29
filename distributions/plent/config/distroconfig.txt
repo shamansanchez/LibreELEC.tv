@@ -2,7 +2,7 @@
 # PlentOS Custom Stuff
 ################################################################################
 
-dtoverlay=pitft28-capacitive,rotate=90,speed=80000000,fps=60
+dtoverlay=pitft28-capacitive,rotate=270,speed=80000000,fps=60
 
 disable_splash=1
 
