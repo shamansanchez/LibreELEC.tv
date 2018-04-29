@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="samba"
-PKG_VERSION="4.7.4"
-PKG_SHA256="fb12d0c4452f85b67b78bbeabd4c762d8feb8ff83e39d044d285120c2c488247"
+PKG_VERSION="4.8.1"
+PKG_SHA256="8ef7367507f16b7a5e2f6aed5bcdbd1143feca79aa2a07c9b21292b17d7f789d"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3+"
 PKG_SITE="https://www.samba.org"
@@ -28,6 +28,7 @@ PKG_NEED_UNPACK="$(get_pkg_directory heimdal) $(get_pkg_directory e2fsprogs)"
 PKG_SECTION="network"
 PKG_SHORTDESC="samba: The free SMB / CIFS fileserver and client"
 PKG_LONGDESC="Samba is a SMB server that runs on Unix and other operating systems. It allows these operating systems (currently Unix, Netware, OS/2 and AmigaDOS) to act as a file and print server for SMB and CIFS clients. There are many Lan-Manager compatible clients such as LanManager for DOS, Windows for Workgroups, Windows NT, Windows 95, Linux smbfs, OS/2, Pathworks and more."
+PKG_BUILD_FLAGS="-gold"
 
 PKG_MAKE_OPTS_TARGET="V=1"
 
@@ -96,24 +97,21 @@ PKG_CONFIGURE_OPTS="--prefix=/usr \
                     --with-syslog  \
                     --nopyc --nopyo"
 
-PKG_SAMBA_TARGET="smbclient"
+PKG_SAMBA_TARGET="smbclient,client/smbclient,smbtree,testparm"
 
 [ "$SAMBA_SERVER" = "yes" ] && PKG_SAMBA_TARGET+=",smbd/smbd,nmbd,smbpasswd"
-[ "$DEVTOOLS" = "yes" ] && PKG_SAMBA_TARGET+=",client/smbclient,smbtree,testparm"
 
 pre_configure_target() {
 # samba uses its own build directory
   cd $PKG_BUILD
     rm -rf .$TARGET_NAME
-# samba fails to build with gold support
-  strip_gold
 
 # work around link issues
   export LDFLAGS="$LDFLAGS -lreadline"
 
 # support 64-bit offsets and seeks on 32-bit platforms
   if [ "$TARGET_ARCH" = "arm" ]; then
-    export CFLAGS+="-D_FILE_OFFSET_BITS=64 -D_OFF_T_DEFINED_ -Doff_t=off64_t -Dlseek=lseek64"
+    export CFLAGS+=" -D_FILE_OFFSET_BITS=64 -D_OFF_T_DEFINED_ -Doff_t=off64_t -Dlseek=lseek64"
   fi
 }
 
@@ -139,29 +137,24 @@ post_makeinstall_target() {
   rm -rf $INSTALL/usr/bin
   rm -rf $INSTALL/usr/lib/python*
   rm -rf $INSTALL/usr/share/perl*
+  rm -rf $INSTALL/usr/lib64
 
   mkdir -p $INSTALL/usr/lib/samba
     cp $PKG_DIR/scripts/samba-config $INSTALL/usr/lib/samba
+    cp $PKG_DIR/scripts/smbd-config $INSTALL/usr/lib/samba
+    cp $PKG_DIR/scripts/samba-autoshare $INSTALL/usr/lib/samba
 
-  mkdir -p $INSTALL/etc/samba
-  if [ -n "$DEVICE" -a -f $PROJECT_DIR/$PROJECT/devices/$DEVICE/config/smb.conf ]; then
-    cp $PROJECT_DIR/$PROJECT/devices/$DEVICE/config/smb.conf $INSTALL/etc/samba
-  elif [ -f $PROJECT_DIR/$PROJECT/config/smb.conf ]; then
-    cp $PROJECT_DIR/$PROJECT/config/smb.conf $INSTALL/etc/samba
-  elif [ -f $DISTRO_DIR/$DISTRO/config/smb.conf ]; then
-    cp $DISTRO_DIR/$DISTRO/config/smb.conf $INSTALL/etc/samba
-  else
-    cp $PKG_DIR/config/smb.conf $INSTALL/etc/samba
+  if find_file_path config/smb.conf; then
+    mkdir -p $INSTALL/etc/samba
+      cp ${FOUND_PATH} $INSTALL/etc/samba
     mkdir -p $INSTALL/usr/config
-      cp $PKG_DIR/config/smb.conf $INSTALL/usr/config/samba.conf.sample
+      cp $INSTALL/etc/samba/smb.conf $INSTALL/usr/config/samba.conf.sample
   fi
 
-  if [ "$DEVTOOLS" = "yes" ]; then
-    mkdir -p $INSTALL/usr/bin
-      cp -PR bin/default/source3/client/smbclient $INSTALL/usr/bin
-      cp -PR bin/default/source3/utils/smbtree $INSTALL/usr/bin
-      cp -PR bin/default/source3/utils/testparm $INSTALL/usr/bin
-  fi
+  mkdir -p $INSTALL/usr/bin
+    cp -PR bin/default/source3/client/smbclient $INSTALL/usr/bin
+    cp -PR bin/default/source3/utils/smbtree $INSTALL/usr/bin
+    cp -PR bin/default/source3/utils/testparm $INSTALL/usr/bin
 
   if [ "$SAMBA_SERVER" = "yes" ]; then
     mkdir -p $INSTALL/usr/bin
@@ -172,10 +165,6 @@ post_makeinstall_target() {
 
     mkdir -p $INSTALL/usr/share/services
       cp -P $PKG_DIR/default.d/*.conf $INSTALL/usr/share/services
-
-    mkdir -p $INSTALL/usr/lib/samba
-      cp $PKG_DIR/scripts/samba-autoshare $INSTALL/usr/lib/samba
-      cp $PKG_DIR/scripts/smbd-config $INSTALL/usr/lib/samba
   fi
 }
 

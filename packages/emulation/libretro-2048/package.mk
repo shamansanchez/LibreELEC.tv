@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="libretro-2048"
-PKG_VERSION="7e8432b"
-PKG_SHA256="322967ce5b9cb7d8ade376874ec067984c4cc28885957e6fcef882201c6e05f8"
+PKG_VERSION="6b6451b"
+PKG_SHA256="843dcd7d88b6bf8092d1e3c48ddbde0dceefe12200b6f52b31d05448eeee491a"
 PKG_ARCH="any"
 PKG_LICENSE="Public domain"
 PKG_SITE="https://github.com/libretro/libretro-2048"

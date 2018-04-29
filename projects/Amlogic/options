@@ -20,7 +20,7 @@
         #
         TARGET_CPU="cortex-a53"
         TARGET_CPU_FLAGS="+crc+fp+simd"
-        TARGET_FEATURES="64bit neon"
+        TARGET_FEATURES="64bit"
         ;;
       arm)
         TARGET_KERNEL_ARCH="arm64"
@@ -29,7 +29,7 @@
         TARGET_CPU="cortex-a53"
         TARGET_CPU_FLAGS="+crc"
         TARGET_FPU="neon-fp-armv8"
-        TARGET_FEATURES="32bit neon"
+        TARGET_FEATURES="32bit"
         ;;
     esac
 
@@ -54,13 +54,15 @@
   # Additional kernel make parameters (for example to specify the u-boot loadaddress)
     KERNEL_MAKE_EXTRACMD=""
 
+  # Additional kernel dependencies
+    KERNEL_EXTRA_DEPENDS_TARGET=""
+
   # Kernel to use. values can be:
   # default:  default mainline kernel
     LINUX="amlogic-3.14"
 
   # kernel image name
     KERNEL_NAME="kernel.img"
-
 
 ################################################################################
 # setup build defaults
@@ -112,22 +114,18 @@
   # for a list of additinoal drivers see packages/linux-drivers
   # Space separated list is supported,
   # e.g. ADDITIONAL_DRIVERS="DRIVER1 DRIVER2"
-    ADDITIONAL_DRIVERS="gpu-aml RTL8192CU RTL8192DU RTL8192EU RTL8812AU \
-                        ap6xxx-aml mt7601u-aml mt7603u-aml qca9377-aml  \
-                        RTL8188EU-aml RTL8189ES-aml RTL8189FS-aml RTL8723BS-aml \
-                        RTL8723DS-aml RTL8822BU-aml ssv6xxx-aml"
-
+    ADDITIONAL_DRIVERS="gpu-aml RTL8192CU RTL8192DU RTL8192EU RTL8812AU RTL8188EU-aml"
 
   # additional Firmware to use (dvb-firmware, misc-firmware, wlan-firmware)
   # Space separated list is supported,
   # e.g. FIRMWARE="dvb-firmware misc-firmware wlan-firmware"
-    FIRMWARE="misc-firmware wlan-firmware dvb-firmware brcmfmac_sdio-firmware-all-aml rtl8723bs_bt qca9377-firmware-aml"
+    FIRMWARE="misc-firmware wlan-firmware dvb-firmware"
 
   # build and install ATV IR remote support (yes / no)
     ATVCLIENT_SUPPORT="no"
 
   # Amlogic IR remote support (yes / no)
-    AMREMOTE_SUPPORT="yes"
+    AMREMOTE_SUPPORT="no"
 
   # build and install iSCSI support - iscsistart (yes / no)
     ISCSI_SUPPORT="no"
@@ -146,4 +144,12 @@
   # additional packages to install:
   # Space separated list is supported,
   # e.g. ADDITIONAL_PACKAGES="PACKAGE1 PACKAGE2"
-    ADDITIONAL_PACKAGES="u-boot-tools-aml"
+    ADDITIONAL_PACKAGES="u-boot-tools-aml dtc"
+
+  # build and install driver addons (yes / no)
+    DRIVER_ADDONS_SUPPORT="yes"
+
+  # driver addons to install:
+  # for a list of additinoal drivers see packages/linux-driver-addons
+  # Space separated list is supported,
+    DRIVER_ADDONS="crazycat hauppauge"

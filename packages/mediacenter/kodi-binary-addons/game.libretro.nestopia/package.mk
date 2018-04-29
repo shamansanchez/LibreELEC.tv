@@ -17,9 +17,9 @@
 ################################################################################
 
 PKG_NAME="game.libretro.nestopia"
-PKG_VERSION="812ff29"
-PKG_SHA256="1c2c1b261c694eb1f1a120ec83840e4269709d4cd4788a345a8ef2588ec8be87"
-PKG_REV="103"
+PKG_VERSION="047b89c"
+PKG_SHA256="80641a62f787bbd396b659b004892e698319a6528166a32b1189a51b4f53e9e4"
+PKG_REV="105"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/kodi-game/game.libretro.nestopia"

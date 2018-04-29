@@ -99,15 +99,12 @@ fi
     . $HOME/.libreelec/options
   fi
 
-# install devtools on development builds
-  if [ -z "$DEVTOOLS" -a "$LIBREELEC_VERSION" = "devel" ]; then
-    DEVTOOLS=yes
-  fi
-
 # overwrite OEM_SUPPORT via commandline
 if [ "$OEM" = yes -o "$OEM" = no ]; then
   OEM_SUPPORT=$OEM
 fi
+
+[ -z ${_DEBUG_DEPENDS_LIST+x} ] && set_debug_depends
 
 check_path >&2
 check_config >&2

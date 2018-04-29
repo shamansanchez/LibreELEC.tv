@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="audiodecoder.ncsf"
-PKG_VERSION="8bd68e4"
-PKG_SHA256="13dcb9b5fb38b1911ed6004bf1740be333e21a2864cffe39dfc9dd6e0adb2614"
+PKG_VERSION="236bcf9"
+PKG_SHA256="0e85db9bd16374e024243420dc12bb8bf17c9d71d769eacb6effb887032e595a"
 PKG_REV="2"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"

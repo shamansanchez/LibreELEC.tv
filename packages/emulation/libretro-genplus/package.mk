@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="libretro-genplus"
-PKG_VERSION="b3219b2"
-PKG_SHA256="8a062f28c1c27a425b4ca6559e988a7392ce0c4c8f2959c8b83ba3041573835b"
+PKG_VERSION="6ba9e05"
+PKG_SHA256="51efda2061d483824bc71c91537dfbfc3edb006cda339bc4c50fc4fc7f93d599"
 PKG_ARCH="any"
 PKG_LICENSE="Modified BSD / LGPLv2.1"
 PKG_SITE="https://github.com/libretro/Genesis-Plus-GX"
@@ -29,6 +29,7 @@ PKG_SECTION="emulation"
 PKG_SHORTDESC="game.libretro.genplus: Genesis Plus GX for Kodi"
 PKG_LONGDESC="game.libretro.genplus: Genesis Plus GX for Kodi"
 PKG_TOOLCHAIN="manual"
+PKG_BUILD_FLAGS="-lto"
 
 PKG_LIBNAME="genesis_plus_gx_libretro.so"
 PKG_LIBPATH="$PKG_LIBNAME"

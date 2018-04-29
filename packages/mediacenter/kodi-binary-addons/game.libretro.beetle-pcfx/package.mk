@@ -17,9 +17,9 @@
 ################################################################################
 
 PKG_NAME="game.libretro.beetle-pcfx"
-PKG_VERSION="6ea4941"
-PKG_SHA256="345acd88501571ce15e2967b3447665d6a11ef588af9bee81d08642bd6680136"
-PKG_REV="103"
+PKG_VERSION="727c3f8"
+PKG_SHA256="9b269fe7db99271084880abcc4072bcf83493a48672cd16b33d5d5a085306c36"
+PKG_REV="105"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/kodi-game/game.libretro.beetle-pcfx"

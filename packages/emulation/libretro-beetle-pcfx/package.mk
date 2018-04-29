@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="libretro-beetle-pcfx"
-PKG_VERSION="bb6adee"
-PKG_SHA256="4c04bc8d27249aac03d16f685fe6cfc852481a562197dfbc943643b2e60a4f1b"
+PKG_VERSION="11be243"
+PKG_SHA256="ae020825ca7f50686daad87ab68a20a11ffc1d8b96b662308b512a607ad34b37"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/beetle-pcfx-libretro"
@@ -34,28 +34,21 @@ PKG_LIBPATH="$PKG_LIBNAME"
 PKG_LIBVAR="BEETLE-PCFX_LIB"
 
 make_target() {
-  case $PROJECT in
-    RPi)
-      case $DEVICE in
-        RPi)
-          make platform=armv6-hardfloat
-          ;;
-        RPi2)
-          make platform=armv7-neon-hardfloat
-          ;;
-      esac
+  case $TARGET_CPU in
+    arm1176jzf-s)
+      make platform=armv6-hardfloat
       ;;
-    imx6)
-      make platform=armv7-cortexa9-neon-hardfloat
+    cortex-a7)
+      make platform=armv7-neon-hardfloat
       ;;
-    WeTek_Play|WeTek_Core|Odroid_C2|WeTek_Hub|WeTek_Play_2)
+    cortex-a9|*cortex-a53|cortex-a17)
       if [ "$TARGET_ARCH" = "aarch64" ]; then
         make platform=aarch64
       else
         make platform=armv7-cortexa9-neon-hardfloat
       fi
       ;;
-    Generic)
+    x86-64)
       make
       ;;
   esac

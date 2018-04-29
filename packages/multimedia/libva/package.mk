@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="libva"
-PKG_VERSION="2.0.0"
-PKG_SHA256="bb0601f9a209e60d8d0b867067323661a7816ff429021441b775452b8589e533"
+PKG_VERSION="2.1.0"
+PKG_SHA256="f3fa953a11d3210c3a4ee79031abdbe0863d5ce13d9b3f93f315f1eec60a4b0f"
 PKG_ARCH="x86_64"
 PKG_LICENSE="GPL"
 PKG_SITE="https://01.org/linuxmedia"
@@ -29,11 +29,11 @@ PKG_LONGDESC="Libva is an open source software library and API specification to 
 PKG_TOOLCHAIN="autotools"
 
 if [ "$DISPLAYSERVER" = "x11" ]; then
-  PKG_DEPENDS_TARGET="toolchain libX11 libXext libXfixes libdrm mesa"
-  DISPLAYSERVER_LIBVA="--enable-x11 --enable-glx --disable-wayland"
+  PKG_DEPENDS_TARGET="toolchain libX11 libXext libXfixes libdrm"
+  DISPLAYSERVER_LIBVA="--enable-x11 --disable-glx --disable-wayland"
 elif [ "$DISPLAYSERVER" = "weston" ]; then
   DISPLAYSERVER_LIBVA="--disable-x11 --disable-glx --enable-wayland"
-  PKG_DEPENDS_TARGET="toolchain libdrm mesa wayland"
+  PKG_DEPENDS_TARGET="toolchain libdrm wayland"
 else
   PKG_DEPENDS_TARGET="toolchain libdrm"
   DISPLAYSERVER_LIBVA="--disable-x11 --disable-glx --disable-wayland"

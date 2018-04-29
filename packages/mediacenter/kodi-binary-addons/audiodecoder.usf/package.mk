@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="audiodecoder.usf"
-PKG_VERSION="99c17c9"
-PKG_SHA256="247c60a16afbf9e9ad082db303ec88eecaffced49fd921776ce492f22b154e6a"
+PKG_VERSION="cec0fe2"
+PKG_SHA256="1bb0afd2debc806fe72c466de76385043b642a9c5b0e2dc6d15ee3bfa0533f7b"
 PKG_REV="2"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"

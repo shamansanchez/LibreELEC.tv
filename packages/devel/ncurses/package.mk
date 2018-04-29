@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="ncurses"
-PKG_VERSION="6.0-20171007"
-PKG_SHA256="d74ce1f651824b6254a6d913d312e4ab32874812bb066288ef87b0b0482c4db5"
+PKG_VERSION="6.1-20180203"
+PKG_SHA256="fac9db9460f271ee632af386a5b502d43a25d7cf14138e3d3166d4bedc4f6cb0"
 PKG_ARCH="any"
 PKG_LICENSE="MIT"
 PKG_SITE="http://www.gnu.org/software/ncurses/"
@@ -27,6 +27,8 @@ PKG_DEPENDS_TARGET="toolchain zlib"
 PKG_SECTION="devel"
 PKG_SHORTDESC="ncurses: The ncurses (new curses) library"
 PKG_LONGDESC="The ncurses (new curses) library is a free software emulation of curses in System V Release 4.0, and more. It uses terminfo format, supports pads and color and multiple highlights and forms characters and function-key mapping, and has all the other SYSV-curses enhancements over BSD curses."
+# causes some segmentation fault's (dialog) when compiled with gcc's link time optimization.
+PKG_BUILD_FLAGS="-lto +pic"
 
 PKG_CONFIGURE_OPTS_TARGET="--without-ada \
                            --without-cxx \
@@ -72,12 +74,6 @@ PKG_CONFIGURE_OPTS_TARGET="--without-ada \
                            --disable-warnings \
                            --disable-home-terminfo \
                            --disable-assertions"
-
-pre_configure_target() {
-  # causes some segmentation fault's (dialog) when compiled with gcc's link time optimization.
-  strip_lto
-    CFLAGS="$CFLAGS -fPIC"
-}
 
 post_makeinstall_target() {
   cp misc/ncurses-config $TOOLCHAIN/bin

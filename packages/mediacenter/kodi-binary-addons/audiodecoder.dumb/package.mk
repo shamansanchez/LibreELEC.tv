@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="audiodecoder.dumb"
-PKG_VERSION="be3e3d6"
-PKG_SHA256="f95d1175cba66b4443b089d8e788a0709c92d4556d45b1abc11647cb67e2a34d"
+PKG_VERSION="6b149a5"
+PKG_SHA256="46e3522851a3e84598d1227673fd04c65256d9e33aa25780314d49db82bfdcc8"
 PKG_REV="2"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"

@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="openssl"
-PKG_VERSION="1.0.2n"
-PKG_SHA256="370babb75f278c39e0c50e8c4e7493bc0f18db6867478341a832a982fd15a8fe"
+PKG_VERSION="1.0.2o"
+PKG_SHA256="ec3f5c9714ba0fd45cb4e087301eb1336c317e0d20b575a125050470e8089e4d"
 PKG_ARCH="any"
 PKG_LICENSE="BSD"
 PKG_SITE="https://www.openssl.org"
@@ -28,6 +28,7 @@ PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="security"
 PKG_SHORTDESC="The Open Source toolkit for Secure Sockets Layer and Transport Layer Security"
 PKG_LONGDESC="The Open Source toolkit for Secure Sockets Layer and Transport Layer Security"
+PKG_BUILD_FLAGS="-parallel"
 
 PKG_CONFIGURE_OPTS_SHARED="--openssldir=/etc/ssl \
                            --libdir=lib \

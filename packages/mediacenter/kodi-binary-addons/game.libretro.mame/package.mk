@@ -17,9 +17,9 @@
 ################################################################################
 
 PKG_NAME="game.libretro.mame"
-PKG_VERSION="dede615"
-PKG_SHA256="fe54990662a79f8b69b84c132287c11464c32c7d274da11c7e25b5ee88c84d98"
-PKG_REV="102"
+PKG_VERSION="2fde70a"
+PKG_SHA256="32b0633ec28166a17554c98172d0cc384d2ada744d7a675368d70b89edf4a60a"
+PKG_REV="104"
 # broken
 PKG_ARCH="none"
 PKG_LICENSE="GPL"

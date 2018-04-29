@@ -28,6 +28,7 @@ PKG_DEPENDS_TARGET="toolchain kodi-platform"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="Late 2014/Early 2015 version of MAME (0.159-ish) for libretro"
 PKG_LONGDESC="Late 2014/Early 2015 version of MAME (0.159-ish) for libretro"
+PKG_BUILD_FLAGS="-lto"
 
 PKG_LIBNAME="mame2014_libretro.so"
 PKG_LIBPATH="$PKG_LIBNAME"
@@ -37,32 +38,24 @@ pre_make_target() {
   export REALCC=$CC
   export CC=$CXX
   export LD=$CXX
-  strip_lto
 }
 
 make_target() {
-  case $PROJECT in
-    RPi)
-      case $DEVICE in
-        RPi)
-          make platform=armv6-hardfloat-arm1176jzf-s
-          ;;
-        RPi2)
-          make platform=armv7-neon-hardfloat-cortex-a7
-          ;;
-      esac
+  case $TARGET_CPU in
+    arm1176jzf-s)
+      make platform=armv6-hardfloat-$TARGET_CPU
       ;;
-    imx6)
-      make platform=armv7-neon-hardfloat-cortex-a9
+    cortex-a7|cortex-a9)
+      make platform=armv7-neon-hardfloat-$TARGET_CPU
       ;;
-    WeTek_Play|WeTek_Core|Odroid_C2|WeTek_Hub|WeTek_Play_2)
+    *cortex-a53|cortex-a17)
       if [ "$TARGET_ARCH" = "aarch64" ]; then
         make platform=aarch64
       else
         make platform=armv7-neon-hardfloat-cortex-a9
       fi
       ;;
-    Generic)
+    x86-64)
       make
       ;;
   esac

@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="fd628"
-PKG_VERSION="1.0"
+PKG_VERSION="1.1"
 PKG_REV="100"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
@@ -31,7 +31,7 @@ PKG_TOOLCHAIN="manual"
 
 PKG_IS_ADDON="yes"
 PKG_ADDON_NAME="service.fd628"
-PKG_ADDON_PROJECTS="S905"
+PKG_ADDON_PROJECTS="S905 S912"
 PKG_ADDON_TYPE="xbmc.service"
 
 make_target() {

@@ -36,8 +36,18 @@ not_supported() {
 }
 
 if [ -n "$PKG_ADDON_PROJECTS" ]; then
-  listcontains "$PKG_ADDON_PROJECTS" "!${DEVICE:-$PROJECT}" && not_supported
-  listcontains "$PKG_ADDON_PROJECTS" "${DEVICE:-$PROJECT}" || listcontains "$PKG_ADDON_PROJECTS" "any" || not_supported
+  [ "${DEVICE}" = "RPi" ] && _DEVICE="RPi1" || _DEVICE="${DEVICE}"
+
+  if listcontains "$PKG_ADDON_PROJECTS" "!${_DEVICE:-$PROJECT}" ||
+     listcontains "$PKG_ADDON_PROJECTS" "!${PROJECT}"; then
+    not_supported
+  fi
+
+  if ! listcontains "$PKG_ADDON_PROJECTS" "${_DEVICE:-$PROJECT}" &&
+     ! listcontains "$PKG_ADDON_PROJECTS" "${PROJECT}" &&
+     ! listcontains "$PKG_ADDON_PROJECTS" "any"; then
+    not_supported
+  fi
 fi
 
 $SCRIPTS/checkdeps
@@ -49,9 +59,13 @@ pack_addon() {
     ADDON_INSTALL_DIR="$TARGET_IMG/$ADDONS/$ADDON_VERSION/${DEVICE:-$PROJECT}/$TARGET_ARCH/$PKG_ADDON_ID"
     ADDONVER="$(xmlstarlet sel -t -v "/addon/@version" $ADDON_BUILD/$PKG_ADDON_ID/addon.xml)"
 
-    if [ -f $ADDON_INSTALL_DIR/$PKG_ADDON_ID-$ADDONVER.zip ] ; then
-      echo "*** WARNING: $PKG_ADDON_ID-$ADDONVER.zip already exists. not overwriting it ***"
-      return 0
+    if [ -f $ADDON_INSTALL_DIR/$PKG_ADDON_ID-$ADDONVER.zip ]; then
+      if [ "$ADDON_OVERWRITE" = "yes" ]; then
+        rm $ADDON_INSTALL_DIR/$PKG_ADDON_ID-$ADDONVER.zip
+      else
+        echo "*** WARNING: $PKG_ADDON_ID-$ADDONVER.zip already exists. not overwriting it ***"
+        return 0
+      fi
     fi
     cd $ADDON_BUILD
     echo "*** compressing Addon $PKG_ADDON_ID ... ***"

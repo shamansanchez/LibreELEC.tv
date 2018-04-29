@@ -17,8 +17,8 @@
 ################################################################################
 
 PKG_NAME="audiodecoder.modplug"
-PKG_VERSION="63c6715"
-PKG_SHA256="95a001229ff68420f0f0bd8424067b1daca44c312abf22739425d272fe167729"
+PKG_VERSION="9892e6b"
+PKG_SHA256="e8522d6f8a4d3ec9e4dc035c158fbded39d37c42307106400e4402b38aaa7175"
 PKG_REV="2"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"

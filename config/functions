@@ -1,4 +1,44 @@
 setup_toolchain() {
+  # lto flag
+  if flag_enabled "lto" "$LTO_SUPPORT" "only-disable"; then
+    TARGET_CFLAGS+=" $CFLAGS_OPTIM_LTO"
+    TARGET_CXXFLAGS+=" $CXXFLAGS_OPTIM_LTO"
+    TARGET_LDFLAGS+=" $LDFLAGS_OPTIM_LTO"
+  fi
+
+  # gold flag
+  if flag_enabled "gold" "$GOLD_SUPPORT" "only-disable"; then
+    TARGET_LDFLAGS+=" $LDFLAGS_OPTIM_GOLD"
+  fi
+
+  # position-independent code
+  if flag_enabled "pic" "no"; then
+    TARGET_CFLAGS+=" $CFLAGS_OPTIM_PIC"
+    TARGET_CXXFLAGS+=" $CXXFLAGS_OPTIM_PIC"
+    TARGET_LDFLAGS+=" $LDFLAGS_OPTIM_PIC"
+  fi
+  if flag_enabled "pic:host" "no"; then
+    HOST_CFLAGS+=" $CFLAGS_OPTIM_PIC"
+    HOST_CXXFLAGS+=" $CXXFLAGS_OPTIM_PIC"
+    HOST_LDFLAGS+=" $LDFLAGS_OPTIM_PIC"
+  fi
+
+  # hardening support
+  if flag_enabled "hardening" "$HARDENING_SUPPORT"; then
+    TARGET_CFLAGS+=" $CFLAGS_OPTIM_HARDENING"
+    TARGET_CXXFLAGS+=" $CXXFLAGS_OPTIM_HARDENING"
+    TARGET_CFLAGS+=" $CPPFLAGS_OPTIM_HARDENING"
+    TARGET_LDFLAGS+=" $LDFLAGS_OPTIM_HARDENING"
+  fi
+
+  # parallel
+  if ! flag_enabled "parallel" "yes"; then
+    NINJA_OPTS="$NINJA_OPTS -j1"
+    export MAKEFLAGS="-j1"
+  else
+    export MAKEFLAGS="-j$CONCURRENCY_MAKE_LEVEL"
+  fi
+
   case "$1" in
     target|init)
       export DESTIMAGE="target"
@@ -38,27 +78,6 @@ setup_toolchain() {
         echo "SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"  >> $CMAKE_CONF
         echo "SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"  >> $CMAKE_CONF
         echo "SET(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"  >> $CMAKE_CONF
-      fi
-      export MESON_CONF=$TOOLCHAIN/etc/meson-$TARGET_NAME.conf
-      if [ ! -f $MESON_CONF ] ; then
-        mkdir -p $TOOLCHAIN/etc
-        echo "[binaries]" >> $MESON_CONF
-        echo "c = '$CC'" >> $MESON_CONF
-        echo "cpp = '$CXX'" >> $MESON_CONF
-        echo "ar = '$AR'" >> $MESON_CONF
-        echo "strip = '$STRIP'" >> $MESON_CONF
-        echo "pkgconfig = '$PKG_CONFIG'" >> $MESON_CONF
-        echo "" >> $MESON_CONF
-        echo "[host_machine]" >> $MESON_CONF
-        echo "system = 'linux'" >> $MESON_CONF
-        echo "cpu_family = '$TARGET_ARCH'" >> $MESON_CONF
-        echo "cpu = '$TARGET_SUBARCH'" >> $MESON_CONF
-        echo "endian = 'little'" >> $MESON_CONF
-        echo "" >> $MESON_CONF
-        echo "[properties]" >> $MESON_CONF
-        echo "root = '$SYSROOT_PREFIX/usr'" >> $MESON_CONF
-        python -c "import os; print('c_args = {}'.format([x for x in os.getenv('CFLAGS').split()]))" >> $MESON_CONF
-        python -c "import os; print('c_link_args = {}'.format([x for x in os.getenv('LDFLAGS').split()]))" >> $MESON_CONF
       fi
       export HOST_CC="$TOOLCHAIN/bin/host-gcc"
       export HOST_CXX="$TOOLCHAIN/bin/host-g++"
@@ -112,27 +131,6 @@ setup_toolchain() {
         echo "SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)" >> $CMAKE_CONF
         echo "SET(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)" >> $CMAKE_CONF
       fi
-      export MESON_CONF=$TOOLCHAIN/etc/meson-$HOST_NAME.conf
-      if [ ! -f $MESON_CONF ] ; then
-        mkdir -p $TOOLCHAIN/etc
-        echo "[binaries]" >> $MESON_CONF
-        echo "c = '$CC'" >> $MESON_CONF
-        echo "cpp = '$CXX'" >> $MESON_CONF
-        echo "ar = '$AR'" >> $MESON_CONF
-        echo "strip = '$STRIP'" >> $MESON_CONF
-        echo "pkgconfig = '$PKG_CONFIG'" >> $MESON_CONF
-        echo "" >> $MESON_CONF
-        echo "[host_machine]" >> $MESON_CONF
-        echo "system = 'linux'" >> $MESON_CONF
-        echo "cpu_family = '$TARGET_ARCH'" >> $MESON_CONF
-        echo "cpu = '$TARGET_SUBARCH'" >> $MESON_CONF
-        echo "endian = 'big'" >> $MESON_CONF
-        echo ""	>> $MESON_CONF
-        echo "[properties]" >> $MESON_CONF
-        echo "root = '$TOOLCHAIN'" >> $MESON_CONF
-        python -c "import os; print('c_args = {}'.format([x for x in os.getenv('CFLAGS').split()]))" >> $MESON_CONF
-        python -c "import os; print('c_link_args = {}'.format([x for x in os.getenv('LDFLAGS').split()]))" >> $MESON_CONF
-      fi
       export HOST_CC="$CC"
       export HOST_CXX="$CXX"
       export HOSTCC="$CC"
@@ -146,6 +144,38 @@ setup_toolchain() {
       export _python_exec_prefix=/
       ;;
   esac
+}
+
+create_meson_conf() {
+  local endian root
+  case "$1" in
+    target|init)    endian="little"
+                    root="$SYSROOT_PREFIX/usr"
+                    ;;
+    host|bootstrap) endian="big"
+                    root="$TOOLCHAIN"
+                    ;;
+  esac
+
+  cat > $2 <<EOF
+[binaries]
+c = '$CC'
+cpp = '$CXX'
+ar = '$AR'
+strip = '$STRIP'
+pkgconfig = '$PKG_CONFIG'
+
+[host_machine]
+system = 'linux'
+cpu_family = '$TARGET_ARCH'
+cpu = '$TARGET_SUBARCH'
+endian = '$endian'
+
+[properties]
+root = '$root'
+$(python -c "import os; print('c_args = {}'.format([x for x in os.getenv('CFLAGS').split()]))")
+$(python -c "import os; print('c_link_args = {}'.format([x for x in os.getenv('LDFLAGS').split()]))")
+EOF
 }
 
 # unset all PKG_* vars apart from those exported by setup_toolchain, then set default values
@@ -180,6 +210,35 @@ kernel_path() {
 
 kernel_version() {
   get_pkg_version linux
+}
+
+kernel_config_path() {
+  local cfg pkg_linux_dir pkg_linux_version config_name
+
+  # avoid infinite recursion if this is called by linux
+  if [ "$PKG_NAME" = "linux" ]; then
+    pkg_linux_version="$PKG_VERSION"
+    pkg_linux_dir="$PKG_DIR"
+  else
+    pkg_linux_version="$(get_pkg_version linux)"
+    pkg_linux_dir="$(get_pkg_directory linux)"
+  fi
+
+  config_name="linux.${TARGET_PATCH_ARCH:-$TARGET_ARCH}.conf"
+
+  for cfg in $PROJECT_DIR/$PROJECT/devices/$DEVICE/linux/$pkg_linux_version/$config_name \
+             $PROJECT_DIR/$PROJECT/devices/$DEVICE/linux/$LINUX/$config_name \
+             $PROJECT_DIR/$PROJECT/devices/$DEVICE/linux/$config_name \
+             $PROJECT_DIR/$PROJECT/linux/$pkg_linux_version/$config_name \
+             $PROJECT_DIR/$PROJECT/linux/$LINUX/$config_name \
+             $PROJECT_DIR/$PROJECT/linux/$config_name \
+             $pkg_linux_dir/config/$pkg_linux_version/$config_name \
+             $pkg_linux_dir/config/$LINUX/$config_name \
+             $pkg_linux_dir/config/$config_name \
+             ; do
+    [[ $cfg =~ /devices//linux/ ]] && continue
+    [ -f "$cfg" ] && echo "$cfg" && break
+  done
 }
 
 # get kernel module dir
@@ -221,16 +280,55 @@ get_pkg_version() {
 }
 
 get_pkg_directory() {
-  get_pkg_variable "$1" PKG_DIR
+  local _PKG_ROOT_NAME=${1%:*} _ALL_DIRS _FOUND=0 _ANCHOR="@?+?@" _PKG_DIR _DIR
+
+  # Check for any available local package in preference to a global package
+  for _DIR in $(echo -e "${_CACHE_PACKAGE_LOCAL}" | grep -F "/${_PKG_ROOT_NAME}${_ANCHOR}"); do
+    _DIR="${_DIR%${_ANCHOR}}"
+    # found first, set $_PKG_DIR
+    _PKG_DIR="$_DIR"
+    # keep track of dirs with package.mk for detecting multiple folders
+    _ALL_DIRS+="${_DIR}\n"
+    _FOUND=$((_FOUND+1))
+  done
+
+  # If there's no local package available, use the global package
+  if [ $_FOUND -eq 0 ]; then
+    for _DIR in $(echo -e "${_CACHE_PACKAGE_GLOBAL}" | grep -F "/${_PKG_ROOT_NAME}${_ANCHOR}"); do
+      _DIR="${_DIR%${_ANCHOR}}"
+      # found first, set $_PKG_DIR
+      _PKG_DIR="$_DIR"
+      # keep track of dirs with package.mk for detecting multiple folders
+      _ALL_DIRS+="${_DIR}\n"
+      _FOUND=$((_FOUND+1))
+    done
+  fi
+
+  # _FOUND multiple packages? fail
+  if [ $_FOUND -gt 1 ]; then
+    echo "Error - multiple package folders for package ${_PKG_ROOT_NAME}:" >&2
+    echo -e "$_ALL_DIRS" >&2
+    exit 1
+  fi
+
+  echo "$_PKG_DIR"
 }
 
 # get variable ($2) for package ($1)
 get_pkg_variable() {
   if [ -n "$1" -a -n "$2" ] ; then
     cd $ROOT
-    . config/options $1
+    . config/options $1 &>/dev/null
     echo "${!2}"
   fi
+}
+
+calculate_stamp() {
+  local stamp
+  stamp="$PKG_DIR $PROJECT_DIR/$PROJECT/patches/$PKG_NAME"
+  [ -n "$DEVICE" ] && stamp+=" $PROJECT_DIR/$PROJECT/devices/$DEVICE/patches/$PKG_NAME"
+  [ -n "$PKG_NEED_UNPACK" ] && stamp+=" $PKG_NEED_UNPACK"
+  find ${stamp} -exec sha256sum {} \; 2>/dev/null | sed "s/ ${ROOT//\//\\/}\// /" | sort | sha256sum | cut -d" " -f1
 }
 
 # return 0 if $2 in space-separated list $1, otherwise return 1
@@ -242,8 +340,186 @@ listcontains() {
   fi
 }
 
+# remove item(s) from list.
+# looping makes it greedy (eg. removefromlist "abc def ghi" "(abc|def)" will work).
+listremoveitem() {
+  local data="${1}" odata tmp_array
+  if [ -n "$1" -a -n "$2" ]; then
+    while [ : ]; do
+      odata="${data}"
+      data="$(echo "${data}" | sed -E "s (^|[[:space:]])${2}($|[[:space:]]) \  g")"
+      [ "${odata}" = "${data}" ] && break
+    done
+  fi
+  # Use array word splitting to squash spaces
+  tmp_array=(${data})
+  echo "${tmp_array[@]}"
+}
+
+# check if a flag is enabled
+# $1: flag-name, $2: default (yes/no), $3: ingenious check (none,only-disable,only-enable)
+# set variable PKG_[FLAG]_[HOST/TARGET]_ENABLED=(yes/no)
+# return 0 if flag is enabled, otherwise 1
+flag_enabled() {
+  # make flag name upper case and replace hyphen with underscore, to use as variable name
+  local flag_name=${1^^}
+  [[ $flag_name =~ : ]] || flag_name+="_TARGET"
+  flag_name="PKG_${flag_name//[:-]/_}_ENABLED"
+
+  # check flag
+  if [ -n "${PKG_BUILD_FLAGS}" ] && listcontains "${PKG_BUILD_FLAGS}" "[+]?$1"; then
+    if [ "${3:none}" = "only-disable" ]; then
+      echo "ERROR: $1 can not enable via PKG_BUILD_FLAGS (found in $PKG_NAME)"
+      exit 1
+    fi
+    declare ${flag_name}="yes"
+    return 0
+  elif [ "$2" = "yes" ] && ! listcontains "${PKG_BUILD_FLAGS}" "-$1"; then
+    declare ${flag_name}="yes"
+    return 0
+  else
+    if [ "${3:none}" = "only-enable" ]; then
+      echo "ERROR: $1 can not disable via PKG_BUILD_FLAGS (found in $PKG_NAME)"
+      exit 1
+    fi
+    declare ${flag_name}="no"
+    return 1
+  fi
+}
+
 target_has_feature() {
   listcontains "$TARGET_FEATURES" "$1"
+}
+
+# find path for matching file or directory, searching standard directory hierarchy, using optional default
+# if a path is located it will be set in FOUND_PATH and exit code will be 0.
+find_path() {
+  local test_func="$1" search="$2" default="$3"
+  local dir match wildcard=0 ftype
+
+  # support wildcard matches
+  [[ $search =~ \* || $search =~ \? ]] && wildcard=1
+
+  [ "$test_func" = "-f" ] && ftype="file" || ftype="dir"
+
+  for dir in $PROJECT_DIR/$PROJECT/devices/$DEVICE/packages/$PKG_NAME \
+             $PROJECT_DIR/$PROJECT/devices/$DEVICE \
+             $PROJECT_DIR/$PROJECT/packages/$PKG_NAME \
+             $PROJECT_DIR/$PROJECT \
+             $DISTRO_DIR/$DISTRO/packages/$PKG_NAME \
+             $DISTRO_DIR/$DISTRO \
+             $PKG_DIR \
+             ; do
+    # ignore directories with missing DEVICE or PKG_NAME components
+    [[ $dir =~ /packages/$ ]] && continue
+    [[ $dir =~ /devices/$ ]] && continue
+    [[ $dir =~ /devices//packages/$PKG_NAME$ ]] && continue
+
+    if [ $wildcard -eq 1 ]; then
+      ls $dir/$search 1>/dev/null 2>&1 && match="$dir/$search" && break
+    else
+      [ $test_func "$dir/$search" ] && match="$dir/$search" && break
+    fi
+  done
+
+  if [ -z "$match" -a -n "$default" ]; then
+    if [[ $default =~ \* || $default =~ \? ]]; then
+      ls $default 1>/dev/null 2>&1 && match="$default"
+    else
+      [ $test_func "$default" ] && match="$default"
+    fi
+  fi
+
+  if [ -n "$match" ]; then
+    FOUND_PATH="$match"
+    [ "${VERBOSE_FIND_PATH,,}" = "yes" ] && echo "find_path: Searching for $ftype: \"$search\", found: \"$FOUND_PATH\"" >&2
+    return 0
+  else
+    unset FOUND_PATH
+    [ "${VERBOSE_FIND_PATH,,}" = "yes" ] && echo "find_path: Searching for $ftype: \"$search\" - not found" >&2
+    return 1
+  fi
+}
+
+find_file_path() {
+  find_path -f "$1" "$2"
+}
+
+find_dir_path() {
+  find_path -d "$1" "$2"
+}
+
+set_debug_depends() {
+  local pkg dep_pkg map tmp_array mpkg bpkg kvpair
+
+  _DEBUG_DEPENDS_LIST=""
+  _DEBUG_PACKAGE_LIST=""
+  if [ "${DEBUG:-no}" != "no" ]; then
+    # Convert DEBUG_GROUPS into array of groups, adding "all" if required
+    declare -A debug_group_map
+    for kvpair in ${DEBUG_GROUPS}; do
+      debug_group_map+=(["${kvpair%=*}"]="${kvpair#*=}")
+    done
+    [ -z "${debug_group_map["all"]}" ] && debug_group_map+=(["all"]="all")
+
+    # Expand $DEBUG into $_DEBUG_PACKAGE_LIST
+    for pkg in ${DEBUG//,/ }; do
+      [ "${pkg}" = "yes" ] && pkg="${DEBUG_GROUP_YES:-all}"
+      map="${debug_group_map["${pkg}"]}"
+      [ -z "${map}" ] && map="${pkg}"
+      for mpkg in ${map//,/ }; do
+        [[ ${mpkg} =~ ^[!-] ]] && bpkg="${mpkg:1}" || bpkg="${mpkg}"
+        # Remove existing instances of this package
+        listcontains "${_DEBUG_PACKAGE_LIST}" "[!-]?${bpkg}" && _DEBUG_PACKAGE_LIST="$(listremoveitem "${_DEBUG_PACKAGE_LIST}" "[!-]?${bpkg}")"
+        # Add package
+        _DEBUG_PACKAGE_LIST+=" ${mpkg}"
+      done
+    done
+    # Use array word splitting to squash spaces
+    tmp_array=(${_DEBUG_PACKAGE_LIST})
+    _DEBUG_PACKAGE_LIST="${tmp_array[@]}"
+
+    # Determine dependencies for each package
+    for pkg in ${_DEBUG_PACKAGE_LIST}; do
+      if [ "${pkg}" != "all" ] && [[ ! ${pkg} =~ ^[!-] ]]; then
+        ! listcontains "${_DEBUG_DEPENDS_LIST}" "${pkg}" && _DEBUG_DEPENDS_LIST+=" ${pkg}"
+        for dep_pkg in $(get_pkg_variable ${pkg} PKG_DEPENDS_TARGET); do
+          [ "${dep_pkg}" = "toolchain" ] && continue
+          [[ ${dep_pkg} =~ ^.*:host$ ]] && continue
+          ! listcontains "${_DEBUG_DEPENDS_LIST}" "${dep_pkg}" && _DEBUG_DEPENDS_LIST+=" ${dep_pkg}"
+        done
+      fi
+    done
+    tmp_array=(${_DEBUG_DEPENDS_LIST})
+    _DEBUG_DEPENDS_LIST="${tmp_array[@]}"
+  fi
+  export _DEBUG_DEPENDS_LIST _DEBUG_PACKAGE_LIST
+}
+
+# Return 0 if building with debug is enabled for the current package (or all packages).
+# Examples: DEBUG=yes  DEBUG=all  DEBUG='all,!linux'  DEBUG=kodi  DEBUG=kodi,samba
+build_with_debug() {
+  if [ "${DEBUG:-no}" != "no" -a -n "${PKG_NAME}" -a -n "${_DEBUG_DEPENDS_LIST+x}" ]; then
+    # Return 1 if this package is not to be built with debug
+    listcontains "${_DEBUG_PACKAGE_LIST}" "[!-]${PKG_NAME}" && return 1
+
+    # Build all packages with debug
+    listcontains "${_DEBUG_PACKAGE_LIST}" "all" && return 0
+
+    # Debugging is enabled for at least one package, so enable debug in the "debug" virtual package
+    [ "${PKG_NAME}" = "debug" ] && return 0
+
+    # Build addons with debug if we're building the mediacenter with debug
+    [ "${PKG_IS_ADDON}" = "yes" ] && listcontains "${_DEBUG_DEPENDS_LIST}" "${MEDIACENTER}" && return 0
+
+    # Build kernel packages with debug if we're building the kernel with debug
+    [ "${PKG_IS_KERNEL_PKG}" = "yes" ] && listcontains "${_DEBUG_DEPENDS_LIST}" "linux" && return 0
+
+    # Build this package with debug if it's a resolved dependency
+    listcontains "${_DEBUG_DEPENDS_LIST}" "${PKG_NAME}" && return 0
+  fi
+
+  return 1
 }
 
 install_binary_addon() {
@@ -355,7 +631,7 @@ install_driver_addon_files() {
   mkdir -p $PKG_MODULE_DIR
   find $@ -name \*.ko -exec cp {} $PKG_MODULE_DIR \;
 
-  find $PKG_MODULE_DIR -name \*.ko -exec $STRIP --strip-debug {} \;
+  find $PKG_MODULE_DIR -name \*.ko -exec ${TARGET_KERNEL_PREFIX}strip --strip-debug {} \;
 
   mkdir -p $PKG_ADDON_DIR
   cp $PKG_DIR/changelog.txt $PKG_ADDON_DIR
@@ -455,26 +731,6 @@ do_autoreconf() {
   fi
 }
 
-strip_lto() {
-  # strip out LTO optimization from *FLAGS
-  if [ -n "$GCC_OPTIM_LTO" ] ; then
-    CFLAGS=`echo $CFLAGS | sed -e "s|$GCC_OPTIM_LTO||g"`
-    CXXFLAGS=`echo $CXXFLAGS | sed -e "s|$GCC_OPTIM_LTO||g"`
-    TARGET_CFLAGS=`echo $TARGET_CFLAGS | sed -e "s|$GCC_OPTIM_LTO||g"`
-    TARGET_CXXFLAGS=`echo $TARGET_CXXFLAGS | sed -e "s|$GCC_OPTIM_LTO||g"`
-  fi
-  if [ -n "$LD_OPTIM_LTO" ] ; then
-    LDFLAGS=`echo $LDFLAGS | sed -e "s|$LD_OPTIM_LTO||g"`
-    TARGET_LDFLAGS=`echo $TARGET_LDFLAGS | sed -e "s|$LD_OPTIM_LTO||g"`
-  fi
-}
-
-strip_gold() {
-  # strip out usage from GOLD linker
-  LDFLAGS=`echo $LDFLAGS | sed -e "s|-fuse-ld=gold||g"`
-  TARGET_LDFLAGS=`echo $TARGET_LDFLAGS | sed -e "s|-fuse-ld=gold||g"`
-}
-
 fix_module_depends() {
   # modify .modinfo section in kernel module to depends on other required modules
   local MODULE="$1"
@@ -558,6 +814,23 @@ check_path() {
   fi
 }
 
+load_build_config() {
+  if [ -d "${1}" -a -f ${1}/.build.conf ]; then
+    source ${1}/.build.conf
+    return 0
+  fi
+  return 1
+}
+
+save_build_config() {
+  local var
+  mkdir -p ${BUILD}
+  rm -f ${BUILD}/.build.conf
+  for var in PROJECT DEVICE ARCH DEBUG BUILD_SUFFIX; do
+    echo "export ${var}=\"${!var}\"" >> ${BUILD}/.build.conf
+  done
+}
+
 check_config() {
   dashes="==========================="
   if [ ! -d $PROJECT_DIR/$PROJECT ]; then
@@ -611,7 +884,12 @@ check_config() {
 
 # strip
 debug_strip() {
-  if [ ! "$DEBUG" = yes ]; then
+  if [ -z "${BUILD_WITH_DEBUG}" ]; then
+    echo "ERROR: debug_strip() must not be called without configuring BUILD_WITH_DEBUG" >&2
+    exit 1
+  fi
+
+  if [ "${BUILD_WITH_DEBUG}" != "yes" ]; then
     find $* -type f -executable | xargs $STRIP 2>/dev/null || :
   fi
 }
@@ -619,7 +897,7 @@ debug_strip() {
 print_color() {
   local clr_name="$1" clr_text="$2" clr_actual
 
-  if [ "$DISABLE_COLORS" == "yes" ]; then
+  if [ "$DISABLE_COLORS" = "yes" ]; then
     [ $# -eq 2 ] && echo -en "${clr_text}"
     return 0
   fi
