@@ -20,7 +20,7 @@ PKG_NAME="plent"
 PKG_VERSION="0.1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
-PKG_DEPENDS_TARGET="toolchain mpd mpd-mpc rpi-fbcp pygame python-mpd2 RPi.GPIO"
+PKG_DEPENDS_TARGET="toolchain mpd mpd-mpc rpi-fbcp pygame python-mpd2 RPi.GPIO bottle"
 PKG_SECTION="python/system"
 PKG_SHORTDESC="plent"
 PKG_LONGDESC="plent"
@@ -48,13 +48,16 @@ post_makeinstall_target() {
   cp $PKG_DIR/stuff/plent.py $INSTALL/usr/bin
   cp $PKG_DIR/stuff/butt.py $INSTALL/usr/bin
   cp $PKG_DIR/stuff/dog.py $INSTALL/usr/bin
+  cp $PKG_DIR/stuff/web.py $INSTALL/usr/bin
 
   chmod 755 $INSTALL/usr/bin/plent.py
   chmod 755 $INSTALL/usr/bin/butt.py
   chmod 755 $INSTALL/usr/bin/dog.py
+  chmod 755 $INSTALL/usr/bin/web.py
 }
 
 post_install() {
   enable_service butt.service
   enable_service plent.service
+  enable_service webgui.service
 }
